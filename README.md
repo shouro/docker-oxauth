@@ -4,7 +4,7 @@ A docker image version of oxAuth.
 
 ## Versioning/Tagging
 
-Each image uses their own versioning/tagging format.
+This image uses its own versioning/tagging format.
 
     <IMAGE-NAME>:<GLUU-SERVER-VERSION>_<INTERNAL-REV-VERSION>
 
