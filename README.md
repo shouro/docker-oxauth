@@ -20,7 +20,7 @@ docker pull gluufederation/oxauth:latest
 
 - `GLUU_KV_HOST`: hostname or IP address of Consul.
 - `GLUU_KV_PORT`: port of Consul.
-- `GLUU_LDAP_URL`: URL to LDAP (single instance or load-balanced).
+- `GLUU_LDAP_URL`: URL to LDAP (single URL or comma-separated URLs).
 - `GLUU_CUSTOM_OXAUTH_URL`: URL to downloadable custom oxAuth files packed using `.tar.gz` format.
 
 ## Volumes
