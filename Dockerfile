@@ -1,6 +1,6 @@
 FROM ubuntu:14.04
 
-MAINTAINER Shouro <shouro@gluu.org>
+MAINTAINER Gluu Inc. <support@gluu.org>
 
 # ===============
 # Ubuntu packages
@@ -30,7 +30,7 @@ RUN cd /usr/lib/jvm && ln -s java-1.8.0-openjdk-amd64 default-java
 # Jetty
 # =====
 
-ENV JETTY_VERSION 9.3.14.v20161028
+ENV JETTY_VERSION 9.3.15.v20161220
 ENV JETTY_TGZ_URL https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/${JETTY_VERSION}/jetty-distribution-${JETTY_VERSION}.tar.gz
 ENV JETTY_HOME /opt/jetty
 ENV JETTY_BASE /opt/gluu/jetty
@@ -66,8 +66,8 @@ RUN wget -q ${JYTHON_DOWNLOAD_URL} -O /tmp/jython.jar \
 # oxAuth
 # ======
 
-ENV OX_VERSION 3.0.1
-ENV OX_BUILD_DATE 2017-02-24
+ENV OX_VERSION 3.1.0-SNAPSHOT
+ENV OX_BUILD_DATE 2017-08-07
 ENV OXAUTH_DOWNLOAD_URL https://ox.gluu.org/maven/org/xdi/oxauth-server/${OX_VERSION}/oxauth-server-${OX_VERSION}.war
 
 # the LABEL defined before downloading ox war/jar files to make sure
@@ -80,11 +80,11 @@ LABEL vendor="Gluu Federation" \
 RUN wget -q ${OXAUTH_DOWNLOAD_URL} -O /tmp/oxauth.war \
     && mkdir -p ${JETTY_BASE}/oxauth/webapps \
     && unzip -qq /tmp/oxauth.war -d ${JETTY_BASE}/oxauth/webapps/oxauth \
-    && java -jar ${JETTY_HOME}/start.jar jetty.home=${JETTY_HOME} jetty.base=${JETTY_BASE}/oxauth --add-to-start=deploy,http,jsp,servlets,ext,http-forwarded \
+    && java -jar ${JETTY_HOME}/start.jar jetty.home=${JETTY_HOME} jetty.base=${JETTY_BASE}/oxauth --add-to-start=deploy,http,jsp,servlets,ext,http-forwarded,websocket \
     && rm -f /tmp/oxauth.war
 
 RUN mkdir -p ${JETTY_USER_HOME_LIB}
-RUN wget -q http://central.maven.org/maven2/org/bouncycastle/bcprov-jdk16/1.46/bcprov-jdk16-1.46.jar -O ${JETTY_USER_HOME_LIB}/bcprov-jdk16-1.46.jar
+# RUN wget -q http://central.maven.org/maven2/org/bouncycastle/bcprov-jdk16/1.46/bcprov-jdk16-1.46.jar -O ${JETTY_USER_HOME_LIB}/bcprov-jdk16-1.46.jar
 
 # ====
 # tini
