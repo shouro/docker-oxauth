@@ -83,8 +83,6 @@ RUN wget -q ${OXAUTH_DOWNLOAD_URL} -O /tmp/oxauth.war \
     && java -jar ${JETTY_HOME}/start.jar jetty.home=${JETTY_HOME} jetty.base=${JETTY_BASE}/oxauth --add-to-start=deploy,http,jsp,servlets,ext,http-forwarded,websocket \
     && rm -f /tmp/oxauth.war
 
-RUN mkdir -p ${JETTY_USER_HOME_LIB}
-# RUN wget -q http://central.maven.org/maven2/org/bouncycastle/bcprov-jdk16/1.46/bcprov-jdk16-1.46.jar -O ${JETTY_USER_HOME_LIB}/bcprov-jdk16-1.46.jar
 RUN mv ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/web.xml ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/web.xml.bak
 COPY jetty/web.xml ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/
 

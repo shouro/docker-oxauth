@@ -42,5 +42,6 @@ cd /opt/gluu/jetty/oxauth
 exec gosu root java -jar /opt/jetty/start.jar -server \
     -Xms256m -Xmx4096m -XX:+DisableExplicitGC \
     -Dgluu.base=/etc/gluu \
-    -Dcatalina.base=/opt/gluu/jetty/oxauth \
+    -Dserver.base=/opt/gluu/jetty/oxauth \
+    -Dlog.base=/opt/gluu/jetty/oxauth \
     -Dpython.home=/opt/jython
