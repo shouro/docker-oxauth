@@ -67,7 +67,7 @@ RUN wget -q ${JYTHON_DOWNLOAD_URL} -O /tmp/jython.jar \
 # ======
 
 ENV OX_VERSION 3.1.0-SNAPSHOT
-ENV OX_BUILD_DATE 2017-08-07
+ENV OX_BUILD_DATE 2017-08-09
 ENV OXAUTH_DOWNLOAD_URL https://ox.gluu.org/maven/org/xdi/oxauth-server/${OX_VERSION}/oxauth-server-${OX_VERSION}.war
 
 # the LABEL defined before downloading ox war/jar files to make sure
@@ -85,6 +85,8 @@ RUN wget -q ${OXAUTH_DOWNLOAD_URL} -O /tmp/oxauth.war \
 
 RUN mkdir -p ${JETTY_USER_HOME_LIB}
 # RUN wget -q http://central.maven.org/maven2/org/bouncycastle/bcprov-jdk16/1.46/bcprov-jdk16-1.46.jar -O ${JETTY_USER_HOME_LIB}/bcprov-jdk16-1.46.jar
+RUN mv ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/web.xml ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/web.xml.bak
+COPY jetty/web.xml ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/
 
 # ====
 # tini
