@@ -2,6 +2,10 @@
 
 A docker image version of oxAuth.
 
+## Latest Stable Release
+
+Latest stable release is `gluufederation/oxauth:3.0.1_rev1.0.0-beta3`. See `CHANGES.md` for archives.
+
 ## Versioning/Tagging
 
 This image uses its own versioning/tagging format.
