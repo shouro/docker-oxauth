@@ -1,9 +1,9 @@
 import base64
 import logging
 import os
-# import time
 
 import consulate
+from M2Crypto.EVP import Cipher
 from requests.exceptions import ConnectionError
 
 GLUU_KV_HOST = os.environ.get("GLUU_KV_HOST", "localhost")
@@ -20,8 +20,7 @@ logger.addHandler(ch)
 
 
 def jks_created():
-    b64_str = consul.kv.get("oxauth_jks_base64")
-    jks = base64.b64decode(b64_str)
+    jks = decrypt_text(consul.kv.get("oxauth_jks_base64"), consul.kv.get("encoded_salt"))
 
     with open(consul.kv.get("oxauth_openid_jks_fn"), "w") as fd:
         fd.write(jks)
@@ -52,6 +51,20 @@ def sync_jks():
 
     # mark sync as failed
     return False
+
+
+def decrypt_text(encrypted_text, key):
+    # Porting from pyDes-based encryption (see http://git.io/htpk)
+    # to use M2Crypto instead (see https://gist.github.com/mrluanma/917014)
+    cipher = Cipher(alg="des_ede3_ecb",
+                    key=b"{}".format(key),
+                    op=0,
+                    iv="\0" * 16)
+    decrypted_text = cipher.update(base64.b64decode(
+        b"{}".format(encrypted_text)
+    ))
+    decrypted_text += cipher.final()
+    return decrypted_text
 
 
 def main():

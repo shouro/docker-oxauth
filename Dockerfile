@@ -16,7 +16,10 @@ RUN apt-get update && apt-get install -y \
     unzip \
     wget \
     python \
+    python-dev \
     python-pip \
+    swig \
+    libssl-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -112,7 +115,8 @@ RUN pip install -U pip
 # and to make sure latest pip is being used, not from OS one
 ENV PYTHONPATH="/usr/local/lib/python2.7/dist-packages:/usr/lib/python2.7/dist-packages"
 
-RUN pip install "consulate==0.6.0"
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # ====
 # cron

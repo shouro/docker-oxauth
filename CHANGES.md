@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 3.0.1_rev1.0.0-beta3
+
+Released on August 16th, 2017.
+
+* Fixed base64 encryption when synchronizing keys.
+
 ## Version 3.0.1_rev1.0.0-beta2
 
 Released on July 25th, 2017.
