@@ -133,5 +133,5 @@ VOLUME ${JETTY_BASE}/oxauth/custom/static
 VOLUME ${JETTY_BASE}/oxauth/lib/ext
 
 COPY scripts /opt/scripts
-RUN chmod +x /opt/scripts/entrypoint.sh \
+RUN chmod +x /opt/scripts/entrypoint.sh
 CMD ["/opt/scripts/entrypoint.sh"]
