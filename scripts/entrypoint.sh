@@ -27,16 +27,13 @@ prepare_jks_sync_env() {
     echo "export GLUU_KV_PORT=${GLUU_KV_PORT}" >> /opt/jks_sync/env
 }
 
+/usr/sbin/crond -f -l 8
 
 if [ ! -f /touched ]; then
     download_custom_tar
     python /opt/scripts/entrypoint.py
     touch /touched
 fi
-
-# run JKS sync as background job
-prepare_jks_sync_env
-cron
 
 cd /opt/gluu/jetty/oxauth
 exec gosu root java -jar /opt/jetty/start.jar -server \
