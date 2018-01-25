@@ -104,7 +104,6 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 RUN mkdir -p /opt/jks_sync/
 COPY scripts/jks_sync.py /opt/jks_sync/
-RUN ls /opt/jks_sync/
 # Give execution rights on the cron job
 RUN chmod 0644 /opt/jks_sync/jks_sync.py \
     && chmod a+x /opt/jks_sync/jks_sync.py \
