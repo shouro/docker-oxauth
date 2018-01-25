@@ -1,33 +1,24 @@
-FROM ubuntu:14.04
+FROM alpine:3.7
 
-MAINTAINER Gluu Inc. <support@gluu.org>
+LABEL maintainer="Gluu Inc. <support@gluu.org>"
 
 # ===============
-# Ubuntu packages
+# Alpine packages
 # ===============
 
-# JDK 8 repo
-RUN echo "deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main" >> /etc/apt/sources.list.d/openjdk.list \
-    && echo "deb-src http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main" >> /etc/apt/sources.list.d/openjdk.list \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 86F44E2A
-
-RUN apt-get update && apt-get install -y \
-    openjdk-8-jre-headless \
+# Jetty requires Java 8, hence we need to get latest OpenJDK 8 from PPA
+RUN apk update && apk add --no-cache \
+    openjdk8 \
     unzip \
     wget \
     python \
+    py-pip \
     python-dev \
-    python-pip \
+    openssl \
     swig \
-    libssl-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# workaround for bug on ubuntu 14.04 with openjdk-8-jre-headless
-RUN /var/lib/dpkg/info/ca-certificates-java.postinst configure
-
-# Set openjdk 8 as default java
-RUN cd /usr/lib/jvm && ln -s java-1.8.0-openjdk-amd64 default-java
+    openssl-dev \
+    build-base \
+    bash 
 
 # =====
 # Jetty
@@ -38,9 +29,10 @@ ENV JETTY_TGZ_URL https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distrib
 ENV JETTY_HOME /opt/jetty
 ENV JETTY_BASE /opt/gluu/jetty
 ENV JETTY_USER_HOME_LIB /home/jetty/lib
-
+RUN pip install -U pip 
 # Install jetty
 RUN wget -q ${JETTY_TGZ_URL} -O /tmp/jetty.tar.gz \
+    && mkdir /opt \
     && tar -xzf /tmp/jetty.tar.gz -C /opt \
     && mv /opt/jetty-distribution-${JETTY_VERSION} ${JETTY_HOME} \
     && rm -rf /tmp/jetty.tar.gz
@@ -90,15 +82,6 @@ RUN mv ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/web.xml ${JETTY_BASE}/oxauth/
 COPY jetty/web.xml ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/
 
 # ====
-# tini
-# ====
-
-ENV TINI_VERSION v0.15.0
-RUN wget -q https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini -O /tini \
-    && chmod +x /tini
-ENTRYPOINT ["/tini", "--"]
-
-# ====
 # gosu
 # ====
 
@@ -106,10 +89,7 @@ ENV GOSU_VERSION 1.10
 RUN wget -q https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64 -O /usr/local/bin/gosu \
     && chmod +x /usr/local/bin/gosu
 
-# ======
-# Python
-# ======
-RUN pip install -U pip
+
 
 # A workaround to address https://github.com/docker/docker-py/issues/1054
 # and to make sure latest pip is being used, not from OS one
@@ -122,17 +102,17 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 # cron
 # ====
 
-RUN mkdir -p /opt/jks_sync
-COPY cron/jks_sync /etc/cron.d/
+RUN mkdir -p /opt/jks_sync/
+COPY scripts/jks_sync.py /opt/jks_sync/
+RUN ls /opt/jks_sync/
 # Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/jks_sync
-RUN touch /var/log/jks_sync.log
-
+RUN chmod 0644 /opt/jks_sync/jks_sync.py \
+    && chmod a+x /opt/jks_sync/jks_sync.py \
+    && echo '45 * * * * /opt/jks_sync/jks_sync.py' > /etc/crontabs/root \
 # ==========
 # misc stuff
 # ==========
-
-RUN mkdir -p /etc/certs \
+    && mkdir -p /etc/certs \
     && mkdir -p /opt/gluu/python/libs \
     && mkdir -p ${JETTY_BASE}/oxauth/custom/pages ${JETTY_BASE}/oxauth/custom/static \
     && mkdir -p /etc/gluu/conf \
@@ -154,5 +134,5 @@ VOLUME ${JETTY_BASE}/oxauth/custom/static
 VOLUME ${JETTY_BASE}/oxauth/lib/ext
 
 COPY scripts /opt/scripts
-RUN chmod +x /opt/scripts/entrypoint.sh
+RUN chmod +x /opt/scripts/entrypoint.sh \
 CMD ["/opt/scripts/entrypoint.sh"]
