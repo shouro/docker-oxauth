@@ -27,6 +27,7 @@ prepare_jks_sync_env() {
     echo "export GLUU_KV_PORT=${GLUU_KV_PORT}" >> /opt/jks_sync/env
 }
 
+prepare_jks_sync_env
 /usr/sbin/crond -f -l 8
 
 if [ ! -f /touched ]; then
