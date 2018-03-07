@@ -1,33 +1,19 @@
-FROM ubuntu:14.04
+FROM openjdk:jre-alpine
 
 MAINTAINER Gluu Inc. <support@gluu.org>
 
 # ===============
-# Ubuntu packages
+# Alpine packages
 # ===============
 
-# JDK 8 repo
-RUN echo "deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main" >> /etc/apt/sources.list.d/openjdk.list \
-    && echo "deb-src http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main" >> /etc/apt/sources.list.d/openjdk.list \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 86F44E2A
-
-RUN apt-get update && apt-get install -y \
-    openjdk-8-jre-headless \
-    unzip \
-    wget \
-    python \
-    python-dev \
-    python-pip \
+RUN apk update && apk add --no-cache \
+    py-pip \
     swig \
-    libssl-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# workaround for bug on ubuntu 14.04 with openjdk-8-jre-headless
-RUN /var/lib/dpkg/info/ca-certificates-java.postinst configure
-
-# Set openjdk 8 as default java
-RUN cd /usr/lib/jvm && ln -s java-1.8.0-openjdk-amd64 default-java
+    openssl \
+    openssl-dev \
+    gcc \
+    python-dev \
+    musl-dev
 
 # =====
 # Jetty
@@ -41,12 +27,13 @@ ENV JETTY_USER_HOME_LIB /home/jetty/lib
 
 # Install jetty
 RUN wget -q ${JETTY_TGZ_URL} -O /tmp/jetty.tar.gz \
+    && mkdir -p /opt \
     && tar -xzf /tmp/jetty.tar.gz -C /opt \
     && mv /opt/jetty-distribution-${JETTY_VERSION} ${JETTY_HOME} \
-    && rm -rf /tmp/jetty.tar.gz
-
-RUN mv ${JETTY_HOME}/etc/webdefault.xml ${JETTY_HOME}/etc/webdefault.xml.bak \
+    && rm -rf /tmp/jetty.tar.gz \
+    && mv ${JETTY_HOME}/etc/webdefault.xml ${JETTY_HOME}/etc/webdefault.xml.bak \
     && mv ${JETTY_HOME}/etc/jetty.xml ${JETTY_HOME}/etc/jetty.xml.bak
+
 COPY jetty/webdefault.xml ${JETTY_HOME}/etc/
 COPY jetty/jetty.xml ${JETTY_HOME}/etc/
 
@@ -62,6 +49,7 @@ ENV JYTHON_DOWNLOAD_URL http://central.maven.org/maven2/org/python/jython-standa
 
 # Install Jython
 RUN wget -q ${JYTHON_DOWNLOAD_URL} -O /tmp/jython.jar \
+    && mkdir -p /opt/jython \
     && unzip -q /tmp/jython.jar -d /opt/jython \
     && rm -f /tmp/jython.jar
 
@@ -81,57 +69,25 @@ LABEL vendor="Gluu Federation" \
 
 # Install oxAuth
 RUN wget -q ${OXAUTH_DOWNLOAD_URL} -O /tmp/oxauth.war \
-    && mkdir -p ${JETTY_BASE}/oxauth/webapps \
+    && mkdir -p ${JETTY_BASE}/oxauth/webapps/oxauth \
     && unzip -qq /tmp/oxauth.war -d ${JETTY_BASE}/oxauth/webapps/oxauth \
     && java -jar ${JETTY_HOME}/start.jar jetty.home=${JETTY_HOME} jetty.base=${JETTY_BASE}/oxauth --add-to-start=deploy,http,jsp,servlets,ext,http-forwarded,websocket \
-    && rm -f /tmp/oxauth.war
+    && rm -f /tmp/oxauth.war \
+    && mv ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/web.xml ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/web.xml.bak
 
-RUN mv ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/web.xml ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/web.xml.bak
 COPY jetty/web.xml ${JETTY_BASE}/oxauth/webapps/oxauth/WEB-INF/
-
-# ====
-# tini
-# ====
-
-ENV TINI_VERSION v0.15.0
-RUN wget -q https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini -O /tini \
-    && chmod +x /tini
-ENTRYPOINT ["/tini", "--"]
-
-# ====
-# gosu
-# ====
-
-ENV GOSU_VERSION 1.10
-RUN wget -q https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64 -O /usr/local/bin/gosu \
-    && chmod +x /usr/local/bin/gosu
 
 # ======
 # Python
 # ======
-RUN pip install -U pip
-
-# A workaround to address https://github.com/docker/docker-py/issues/1054
-# and to make sure latest pip is being used, not from OS one
-ENV PYTHONPATH="/usr/local/lib/python2.7/dist-packages:/usr/lib/python2.7/dist-packages"
 
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
-
-# ====
-# cron
-# ====
-
-RUN mkdir -p /opt/jks_sync
-COPY cron/jks_sync /etc/cron.d/
-# Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/jks_sync
-RUN touch /var/log/jks_sync.log
+RUN pip install -U pip \
+    && pip install --no-cache-dir -r /tmp/requirements.txt
 
 # ==========
 # misc stuff
 # ==========
-
 RUN mkdir -p /etc/certs \
     && mkdir -p /opt/gluu/python/libs \
     && mkdir -p ${JETTY_BASE}/oxauth/custom/pages ${JETTY_BASE}/oxauth/custom/static \

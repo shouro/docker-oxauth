@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 download_custom_tar() {
@@ -22,24 +22,16 @@ download_custom_tar() {
     fi
 }
 
-prepare_jks_sync_env() {
-    echo "export GLUU_KV_HOST=${GLUU_KV_HOST}" > /opt/jks_sync/env
-    echo "export GLUU_KV_PORT=${GLUU_KV_PORT}" >> /opt/jks_sync/env
-}
-
-
 if [ ! -f /touched ]; then
     download_custom_tar
     python /opt/scripts/entrypoint.py
     touch /touched
 fi
 
-# run JKS sync as background job
-prepare_jks_sync_env
-cron
+python /opt/scripts/jks_sync.py &
 
 cd /opt/gluu/jetty/oxauth
-exec gosu root java -jar /opt/jetty/start.jar -server \
+exec java -jar /opt/jetty/start.jar -server \
     -Xms256m -Xmx4096m -XX:+DisableExplicitGC \
     -Dgluu.base=/etc/gluu \
     -Dserver.base=/opt/gluu/jetty/oxauth \

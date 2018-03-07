@@ -1,6 +1,7 @@
 import base64
 import logging
 import os
+import time
 
 import consulate
 from M2Crypto.EVP import Cipher
@@ -69,18 +70,20 @@ def decrypt_text(encrypted_text, key):
 
 def main():
     try:
-        # while True:
-        logger.info("checking whether JKS should be synchronized")
-        try:
-            if should_sync_jks():
-                sync_jks()
-            else:
-                logger.info("no need to sync JKS at the moment")
-        except ConnectionError as exc:
-            logger.warn("unable to connect to KV storage; reason={}".format(exc))
+        while True:
+            logger.info("checking whether JKS should be synchronized")
+            try:
+                if should_sync_jks():
+                    sync_jks()
+                else:
+                    logger.info("no need to sync JKS at the moment")
+            except ConnectionError as exc:
+                logger.warn("unable to connect to KV storage; reason={}".format(exc))
+            except Exception as exc:
+                logger.warn("got unhandled error; reason={}".format(exc))
 
-            # # sane interval
-            # time.sleep(10)
+            # sane interval
+            time.sleep(60)
     except KeyboardInterrupt:
         logger.warn("canceled by user; exiting ...")
 
