@@ -1,6 +1,6 @@
 FROM openjdk:jre-alpine
 
-MAINTAINER Gluu Inc. <support@gluu.org>
+LABEL maintainer="Gluu Inc. <support@gluu.org>"
 
 # ===============
 # Alpine packages
